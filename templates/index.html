@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduPredict | Academic Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --black: #03040a;
+            --deep: #080b14;
+            --surface: #0d1120;
+            --border: rgba(255,255,255,0.07);
+            --cyan: #00e5ff;
+            --cyan-dim: rgba(0,229,255,0.12);
+            --amber: #ffb300;
+            --white: #f0f4ff;
+            --muted: rgba(240,244,255,0.38);
+        }
+
+        html, body {
+            height: 100%;
+            background: var(--black);
+            color: var(--white);
+            font-family: 'Syne', sans-serif;
+            overflow: hidden;
+        }
+
+        /* ── Canvas background ── */
+        #starfield {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+        }
+
+        /* ── Glow orbs ── */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+            z-index: 1;
+            animation: drift 18s ease-in-out infinite alternate;
+        }
+        .orb-1 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(0,229,255,0.09) 0%, transparent 70%);
+            top: -150px; left: -100px;
+        }
+        .orb-2 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(255,179,0,0.07) 0%, transparent 70%);
+            bottom: -150px; right: -100px;
+            animation-delay: -9s;
+        }
+        @keyframes drift {
+            from { transform: translate(0, 0) scale(1); }
+            to   { transform: translate(40px, 30px) scale(1.08); }
+        }
+
+        /* ── Grid overlay ── */
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background-image:
+                linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
+        /* ── Main layout ── */
+        .stage {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        /* ── Badge ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,229,255,0.06);
+            border: 1px solid rgba(0,229,255,0.2);
+            border-radius: 100px;
+            padding: 6px 16px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            color: var(--cyan);
+            text-transform: uppercase;
+            margin-bottom: 36px;
+            opacity: 0;
+            animation: fadeUp 0.8s 0.2s ease forwards;
+        }
+        .badge-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--cyan);
+            box-shadow: 0 0 8px var(--cyan);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        /* ── Headline ── */
+        .headline {
+            text-align: center;
+            max-width: 780px;
+            opacity: 0;
+            animation: fadeUp 0.9s 0.4s ease forwards;
+        }
+        .headline h1 {
+            font-size: clamp(3.2rem, 8vw, 6.5rem);
+            font-weight: 800;
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            margin-bottom: 28px;
+        }
+        .headline h1 .line-1 { color: var(--white); display: block; }
+        .headline h1 .line-2 {
+            display: block;
+            background: linear-gradient(90deg, var(--cyan) 0%, var(--amber) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .headline p {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.88rem;
+            color: var(--muted);
+            line-height: 1.8;
+            letter-spacing: 0.02em;
+            max-width: 480px;
+            margin: 0 auto 44px;
+        }
+
+        /* ── CTA group ── */
+        .cta-group {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            opacity: 0;
+            animation: fadeUp 0.9s 0.65s ease forwards;
+        }
+
+        .btn-primary {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--cyan);
+            color: var(--black);
+            padding: 16px 32px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 30px rgba(0,229,255,0.25);
+        }
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+        .btn-primary:hover::before { transform: translateX(100%); }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 50px rgba(0,229,255,0.45), 0 12px 40px rgba(0,0,0,0.4);
+        }
+        .btn-arrow {
+            font-size: 1.1rem;
+            transition: transform 0.2s;
+        }
+        .btn-primary:hover .btn-arrow { transform: translateX(4px); }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 28px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.05em;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .btn-ghost:hover {
+            border-color: rgba(255,255,255,0.2);
+            color: var(--white);
+        }
+
+        /* ── Stats row ── */
+        .stats-row {
+            position: absolute;
+            bottom: 48px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 48px;
+            align-items: center;
+            opacity: 0;
+            animation: fadeUp 0.9s 0.9s ease forwards;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-num {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--white);
+        }
+        .stat-num span { color: var(--cyan); }
+        .stat-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--muted);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+        .stat-divider {
+            width: 1px;
+            height: 36px;
+            background: var(--border);
+        }
+
+        /* ── Corner decorations ── */
+        .corner {
+            position: fixed;
+            z-index: 2;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.6rem;
+            color: rgba(0,229,255,0.3);
+            letter-spacing: 0.1em;
+        }
+        .corner-tl { top: 24px; left: 28px; }
+        .corner-tr { top: 24px; right: 28px; text-align: right; }
+        .corner-br { bottom: 24px; right: 28px; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .stats-row { gap: 24px; bottom: 32px; }
+            .stat-divider { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+<div class="grid-overlay"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<!-- Corner decorations -->
+<div class="corner corner-tl">EDU_PREDICT v2.0<br>SYSTEM READY</div>
+<div class="corner corner-tr">MODEL: GRADIENT_BOOST<br>STATUS: ONLINE</div>
+<div class="corner corner-br">© 2025 EDUPREDICT</div>
+
+<div class="stage">
+    <div class="badge">
+        <span class="badge-dot"></span>
+        ML Pipeline Active
+    </div>
+
+    <div class="headline">
+        <h1>
+            <span class="line-1">Predict Academic</span>
+            <span class="line-2">Excellence.</span>
+        </h1>
+        <p>
+            A precision machine learning pipeline engineered to predict
+            student math performance from behavioral and demographic inputs.
+        </p>
+
+        <div class="cta-group">
+            <a href="/predict" class="btn-primary">
+                Launch Dashboard
+                <span class="btn-arrow">→</span>
+            </a>
+            <a href="#" class="btn-ghost">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>
+                How It Works
+            </a>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat">
+            <div class="stat-num">98<span>%</span></div>
+            <div class="stat-label">Accuracy Rate</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+            <div class="stat-num">7</div>
+            <div class="stat-label">Input Features</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+            <div class="stat-num">&lt;1<span>s</span></div>
+            <div class="stat-label">Inference Time</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+            <div class="stat-num">∞</div>
+            <div class="stat-label">Predictions</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Starfield canvas
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < 160; i++) {
+        stars.push({
+            x: Math.random(),
+            y: Math.random(),
+            r: Math.random() * 1.2 + 0.2,
+            a: Math.random(),
+            speed: Math.random() * 0.0003 + 0.0001
+        });
+    }
+
+    let mouse = { x: 0.5, y: 0.5 };
+    document.addEventListener('mousemove', e => {
+        mouse.x = e.clientX / window.innerWidth;
+        mouse.y = e.clientY / window.innerHeight;
+    });
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        stars.forEach(s => {
+            s.a += s.speed;
+            const alpha = (Math.sin(s.a) * 0.5 + 0.5) * 0.6 + 0.1;
+            const dx = (s.x - mouse.x) * 0.015;
+            const dy = (s.y - mouse.y) * 0.015;
+            const px = (s.x + dx) * canvas.width;
+            const py = (s.y + dy) * canvas.height;
+            ctx.beginPath();
+            ctx.arc(px, py, s.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(200,230,255,${alpha})`;
+            ctx.fill();
+        });
+        requestAnimationFrame(draw);
+    }
+    draw();
+</script>
+
+</body>
+</html>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
