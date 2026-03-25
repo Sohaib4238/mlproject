@@ -875,7 +875,7 @@
                     <script>
                         // Animate on load
                         document.addEventListener('DOMContentLoaded', () => {
-                            const finalScore = {{ results }};
+                            const finalScore = Number("{{ results }}");
                             const circumference = 2 * Math.PI * 70;
                             const ring = document.getElementById('score-ring');
                             const valEl = document.getElementById('score-val');
